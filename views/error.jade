@@ -1,0 +1,15 @@
+extends layout
+
+block content
+  h1= message
+  h2= error.status
+  pre #{error.stack}
+
+  hr
+  p if 'Not Found' message were displayed, plz go to main page.
+  p
+    a(href="/") go to main page
+  hr
+  p error was occured!
+  p please let system administrator know about this error information.
+  p system administrator's contact information is puniculla@eastarjet.com.

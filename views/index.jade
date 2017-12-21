@@ -1,0 +1,26 @@
+extends layout
+
+block content
+  h1= title
+  p Welcome to #{title}
+  hr
+  h2 Usage
+  ul
+    li
+      p 1 : move board page
+    li
+      p 2 : select date and PORT
+    li
+      p 3 : push show list button
+    li
+      p if you want to see the scheduled information at same time, push update button.
+
+  h2 Site Map
+  ul
+    li
+      p
+        a(href="/daily_flight_board.html") go to Board
+
+  hr
+  h2 sample image
+  image(src='/images/flight_board.PNG' width='800')

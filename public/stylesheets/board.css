@@ -1,0 +1,50 @@
+.tick line{
+  fill:none;
+  stroke: lightgray;
+  stroke-dasharray: 5 5;
+}
+line.range, line.max, line.min{
+  stroke: black;
+  stroke-width: 4px;
+}
+line.median{
+  stroke: darkgray;
+  stroke-width: 4px;
+}
+path.domain{
+  display: none;
+}
+rect {
+  stroke: black;
+  stroke-width: 2px;
+}
+
+.kor {
+  fill: yellow;
+}
+.jpn {
+  fill: orange;
+}
+.oth {
+  fill: lightgray;
+}
+div.info_position {
+  position: absolute;
+  top: 200px;
+  left: 200px;
+  z-index: 3;
+}
+div.info_visible {
+  visibility: visible;
+  background-color:lightgray;
+  border: 1px solid gray;
+  padding: 2px;
+}
+div.info_hidden {
+  visibility: hidden;
+}
+div.info_detail{
+  border: 1px solid darkgray;
+  margin: 5px;
+  padding: 15px;
+}
