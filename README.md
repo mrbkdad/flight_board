@@ -13,3 +13,6 @@ we got a plan to use nodejs, d3js, mssql db.
 every thing will be open.
 
 if you want to use this product in your company, email to me(park363@daum.net), then i will guide you.
+
+screen capture
+<a href='https://github.com/mrbkdad/flight_board/blob/master/public/images/flight_board.PNG' width=600>
