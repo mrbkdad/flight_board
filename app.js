@@ -9,12 +9,11 @@ var session = require('express-session');
 var index = require('./routes/index');
 var users = require('./routes/users');
 var flight_board = require('./routes/flight_board');
+var job_workers = require('./routes/job_workers');
 
 var app = express();
-// PORT
-app.settings.port = 8080;
 // production
-//app.settings.env = 'production';
+app.settings.env = 'production';
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -35,11 +34,10 @@ app.use(session({
 }));
 
 
-
-
 app.use('/', index);
 app.use('/users', users);
 app.use('/flight_board', flight_board);
+app.use('/job_workers', job_workers);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

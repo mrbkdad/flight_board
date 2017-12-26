@@ -1,7 +1,7 @@
 // init value
 var svg_w = 1800;//board size
 var pad_left = 80, pad_right = 30, pad_top = 30, pad_bottom = 30;
-var box_h = 60;
+var box_h = 55;
 var box_min = 70; // min width of box
 
 // time scale
@@ -15,6 +15,10 @@ var svg = null;
 // Scale 객체
 var x_scale = null;
 var y_scale = null;
+
+// HLNumber 표시
+var hl_map = {};
+
 // event function -- ajax
 function select_event(){
   var sel_date = d3.select('#log_date').property('value');
@@ -45,6 +49,19 @@ function flight_board(){
 
 // draw board
 function draw_plot(sel_date,draw_data){
+  // initialize worker div
+  d3.select('#job_workers').remove();
+  d3.select('body').append('div').attr('id','job_workers')
+    .style('display','none').style('position','absolute');
+  d3.select('#job_workers').append('select')
+    .attr('id','worker').attr('name','worker')
+    .append('option').attr('value','000000').text('작업자');
+  d3.select('#job_workers').append('button')
+    .attr('id','save_worker').attr('disabled',true).text('o');
+  d3.select('#job_workers').append('button')
+    .attr('id','close_worker').attr('disabled',true).text('x');
+
+
   var hl_set = new Set();
   draw_data.forEach(function(d){hl_set.add(d.ACNumber);});
   // y scale size 조정, hl# list 갯수만큼 생성 할 수 있도록
@@ -69,7 +86,7 @@ function draw_plot(sel_date,draw_data){
   svg.append("g").attr("id","y_axis")
     .attr("transform","translate("+pad_left+","+0+")").call(y_axis);
   // HLNumber 표시
-  var hl_map = {};
+  //var hl_map = {};
   var i = 1;
   Array.from(hl_set).sort().forEach(function(d){
     draw_text(svg.append("g"),0,y_scale(i)-box_h/2,d).attr("font-size",20);
@@ -101,7 +118,8 @@ function draw_plot(sel_date,draw_data){
         from:d.RouteFrom,
         to:d.RouteTo,
         info:info,
-    });
+    }).datum(d);// data binding
+    //.on("click",click_flight);
 
     // 정보 출력
     // 1. flight mumber 가운데 출력
@@ -111,7 +129,9 @@ function draw_plot(sel_date,draw_data){
     // text-anchor 속성을 이용하여 위치 조정
     draw_text(box_g,box_w/2,box_h/2+10,d.FlightNumber)
       .attr('text-anchor','middle')
-      .attr("id","FlightNumber").attr("font-size",box_w>100?"30":"20");
+      .attr("id","FlightNumber").attr("font-size",box_w>100?"28":"19")
+      //mouse click event
+      .on('click',show_worker);
     draw_text(box_g,2,box_h-5,d.RouteFrom)
       .attr('text-anchor','start')
       .attr("id","RouteFrom").attr("font-size","14");
@@ -140,8 +160,6 @@ function draw_plot(sel_date,draw_data){
       .attr('text-anchor','end')
       .attr("id","sch_end_time").attr("font-size","12")
       .attr("fill","darkred").attr("opacity",0.9);
-
-
   });
   // 현재 시간 표시 라인 그리기
   var now = new Date();
@@ -181,8 +199,7 @@ function draw_box(p_obj,cname,cdata){
   box_g.append("rect").attr("id",cname+"_rect").attr("class",check_route(cdata.from,cdata.to))//.attr("class","range")
     .attr("width",cdata.width).attr("height",cdata.height)
     //.attr("y",-cdata.height/2)//.attr("x",-cdata.width/2)
-    .attr("info",cdata.info)
-    .on("click",click_flight);
+    .attr("info",cdata.info);
   return box_g;
 }
 function draw_line(p_obj,x1,x2,y1,y2){
@@ -207,7 +224,32 @@ function click_flight(){
   d3.select("#flight_info #information").html(information);
   d3.select("#flight_info").attr("class","info_visible");
 }
-
+function show_worker(d){
+    var start_time = d.StandardTimeDeparture.replace('T',' ').substring(0,16);
+    var end_time = d.StandardTimeArrival.replace('T',' ').substring(0,16);
+    var x1 = x_scale(parseTime(start_time));
+    var x2 = x_scale(parseTime(end_time));
+    var y = y_scale(hl_map[d.ACNumber])
+    var temp_top = d3.select('#controls').style('height');
+    var temp_g = d3.select('#'+d.ACNumber+'_'+d.FlightNumber);
+    var sel_station = d3.select('#station').property('value')
+    var workers_top = parseFloat(temp_top)+y+38;
+    var workers_left = x1+10;
+    // setup data
+    d3.json('/job_workers/'+sel_station,(err,data)=>{
+      //console.log(data.data.recordset);
+      var worker_options = d3.select('#job_workers').select('#worker');
+      worker_options.selectAll('option').remove();
+      data.data.recordset.forEach((record)=>{
+      	worker_options.append('option')
+          .attr('value',record['EmpCode']).text(record['EmpName']);
+      });
+    });
+    //console.log(workers_top,workers_left);
+    d3.select('#job_workers').style('top',workers_top+'px')
+      .style('left',workers_left+'px')
+      .style('display','block');
+}
 function yyyymmdd(date,del="-")
 {
   // Date => YYYY-MM-DD 형식의 문자열로
