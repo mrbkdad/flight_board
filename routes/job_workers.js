@@ -48,4 +48,22 @@ router.get('/:station', function(req, res, next) {
   });
 });
 
+router.get('/info/:empcd',function(req,res,next){
+  var empcd = req.params.empcd;
+  console.log('/job_workers/info',req.params);
+  var query = `SELECT EmpCode, EmpName, eMail, MobileNo
+              FROM EmpMaster
+              WHERE EmpCode =  '${empcd}'`;
+  console.log(query);
+
+  connection.runQuery(query, function(err, recordset) {
+     // call callback
+     var result = {};
+     result['result'] = 1;
+     result['data'] = recordset;
+     res.send(result);
+  });
+
+});
+
 module.exports = router;

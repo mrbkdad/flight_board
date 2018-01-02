@@ -12,6 +12,7 @@ var parseTime = d3.timeParse("%Y-%m-%d %H:%M");
 
 // svg 객체
 var svg = null;
+
 // Scale 객체
 var x_scale = null;
 var y_scale = null;
@@ -57,9 +58,9 @@ function draw_plot(sel_date,draw_data){
     .attr('id','worker').attr('name','worker')
     .append('option').attr('value','000000').text('작업자');
   d3.select('#job_workers').append('button')
-    .attr('id','save_worker').attr('disabled',true).text('o');
+    .attr('id','save_worker').text('o');//.attr('disabled',true).text('o');
   d3.select('#job_workers').append('button')
-    .attr('id','close_worker').attr('disabled',true).text('x');
+    .attr('id','close_worker').text('x');//.attr('disabled',true).text('x');
 
 
   var hl_set = new Set();
@@ -144,6 +145,22 @@ function draw_plot(sel_date,draw_data){
     draw_text(box_g,box_w-2,box_h/4-2,end_time.substr(11))//box_w-31
       .attr('text-anchor','end')
       .attr("id","end_time").attr("font-size","12");
+    draw_text(box_g,box_w/2,-10,'').attr("id","worker")//worker
+    .attr('text-anchor','middle')
+    .attr("font-size","14").attr("font-weight","10")
+    .attr('empcd','')
+    .on('mouseover',(d)=>{//mouse over tooltip
+      //console.log(d);
+      d3.select('#tooltip_div').transition().duration(200)
+        .style("opacity", .9);
+      d3.select('#tooltip_div')
+         .style("left", (d3.event.pageX + 5) + "px")
+         .style("top", (d3.event.pageY - 28) + "px")
+         .html(show_emp(d3.select('#'+d.ACNumber+'_'+d.FlightNumber).select('#worker').attr('empcd')));
+    }).on("mouseout", function(d) {
+       d3.select('#tooltip_div').transition().duration(500).style("opacity", 0);
+    });
+
     draw_text(box_g,0,-10,'').attr("id","worker1")//worker1
     .attr('text-anchor','middle')
     .attr("font-size","14").attr("font-weight","10");
@@ -249,6 +266,30 @@ function show_worker(d){
     d3.select('#job_workers').style('top',workers_top+'px')
       .style('left',workers_left+'px')
       .style('display','block');
+    //button select_event
+    d3.select('button#save_worker').on('click',(d,i,n)=>{
+      var selected_empcd = $("select#worker option:selected").val();
+      var selected_empnm = $("select#worker option:selected").text();
+      console.log(selected_empcd);
+      temp_g.select('#worker').attr('empcd',selected_empcd).text(selected_empnm);
+    });
+    d3.select('button#close_worker').on('click',(d,i,n)=>{
+      d3.select('#job_workers').style('display','none');
+    });
+}
+function show_emp(id){
+  console.log(id);
+    return function(){
+      d3.json('/job_workers/info/'+id,(err,data)=>{
+        var html = 'Name : '+data.data.recordset[0].EmpName +
+                  '<br/>Email: ' + data.data.recordset[0].eMail +
+                  '<br/>Tel : '+ data.data.recordset[0].MobileNo;
+        d3.select('#tooltip_div').html(html);
+        //console.log(data.data.recordset);
+      });
+      //return "Name:<br/>Tel:<br/>Email:"
+    }
+
 }
 function yyyymmdd(date,del="-")
 {
