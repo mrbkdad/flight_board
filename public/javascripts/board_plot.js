@@ -58,7 +58,11 @@ function draw_plot(sel_date,draw_data){
     .attr('id','worker').attr('name','worker')
     .append('option').attr('value','000000').text('작업자');
   d3.select('#job_workers').append('button')
-    .attr('id','save_worker').text('o');//.attr('disabled',true).text('o');
+    .attr('id','save_workerD').text('D');//.attr('disabled',true).text('o');
+  d3.select('#job_workers').append('button')
+    .attr('id','save_workerB').text('B');//.attr('disabled',true).text('o');
+  d3.select('#job_workers').append('button')
+    .attr('id','save_workerA').text('A');//.attr('disabled',true).text('o');
   d3.select('#job_workers').append('button')
     .attr('id','close_worker').text('x');//.attr('disabled',true).text('x');
 
@@ -99,9 +103,10 @@ function draw_plot(sel_date,draw_data){
   draw_data.forEach(function(d){
     var start_time = d.StandardTimeDeparture.replace('T',' ').substring(0,16);
     var end_time = d.StandardTimeArrival.replace('T',' ').substring(0,16);
-    var x1 = x_scale(parseTime(start_time));
-    var x2 = x_scale(parseTime(end_time));
-    var y = y_scale(hl_map[d.ACNumber])
+    var x1 = rtime_to_postion(d.StandardTimeDeparture);//x_scale(parseTime(start_time));
+    var x2 = rtime_to_postion(d.StandardTimeArrival);//x_scale(parseTime(end_time));
+    var y = acnumber_to_postion(d.ACNumber);// y_scale(hl_map[d.ACNumber])
+
     var info = d.ACNumber+"/"+d.FlightNumber+"/"
       +d.RouteFrom+"/"+d.RouteTo+"/"
       +start_time+"/"+end_time;
@@ -145,30 +150,45 @@ function draw_plot(sel_date,draw_data){
     draw_text(box_g,box_w-2,box_h/4-2,end_time.substr(11))//box_w-31
       .attr('text-anchor','end')
       .attr("id","end_time").attr("font-size","12");
-    draw_text(box_g,box_w/2,-10,'').attr("id","worker")//worker
+    // 작업자 3명 표시 - 보내는자(D), 받는자(A), 탑승지원(B)
+    draw_text(box_g,box_w/2,-10,'').attr("id","workerB")//worker
     .attr('text-anchor','middle')
     .attr("font-size","14").attr("font-weight","10")
     .attr('empcd','')
     .on('mouseover',(d)=>{//mouse over tooltip
       //console.log(d);
-      d3.select('#tooltip_div').transition().duration(200)
-        .style("opacity", .9);
-      d3.select('#tooltip_div')
-         .style("left", (d3.event.pageX + 5) + "px")
-         .style("top", (d3.event.pageY - 28) + "px")
-         .html(show_emp(d3.select('#'+d.ACNumber+'_'+d.FlightNumber).select('#worker').attr('empcd')));
+      bubble_show(d3.event.pageX + 5,d3.event.pageY - 50,
+        show_emp(d3.select('#'+d.ACNumber+'_'+d.FlightNumber).select('#workerB').attr('empcd')));
     }).on("mouseout", function(d) {
-       d3.select('#tooltip_div').transition().duration(500).style("opacity", 0);
+      bubble_hide();
+       //d3.select('#tooltip_div').transition().duration(500).style("opacity", 0);
+    });
+    draw_text(box_g,0,-10,'').attr("id","workerD")//worker1
+    .attr('text-anchor','middle')
+    .attr("font-size","14").attr("font-weight","10")
+    .attr('empcd','')
+    .on('mouseover',(d)=>{//mouse over tooltip
+      //console.log(d);
+      bubble_show(d3.event.pageX + 5,d3.event.pageY - 50,
+        show_emp(d3.select('#'+d.ACNumber+'_'+d.FlightNumber).select('#workerD').attr('empcd')));
+    }).on("mouseout", function(d) {
+      bubble_hide();
+       //d3.select('#tooltip_div').transition().duration(500).style("opacity", 0);
+    });
+    draw_text(box_g,box_w,-10,'').attr("id","workerA")//worker2
+    .attr('text-anchor','middle')
+    .attr("font-size","14").attr("font-weight","10")
+    .attr('empcd','')
+    .on('mouseover',(d)=>{//mouse over tooltip
+      //console.log(d);
+      bubble_show(d3.event.pageX + 5,d3.event.pageY - 50,
+        show_emp(d3.select('#'+d.ACNumber+'_'+d.FlightNumber).select('#workerA').attr('empcd')));
+    }).on("mouseout", function(d) {
+      bubble_hide();
+       //d3.select('#tooltip_div').transition().duration(500).style("opacity", 0);
     });
 
-    draw_text(box_g,0,-10,'').attr("id","worker1")//worker1
-    .attr('text-anchor','middle')
-    .attr("font-size","14").attr("font-weight","10");
-    draw_text(box_g,box_w,-10,'').attr("id","worker2")//worker2
-    .attr('text-anchor','middle')
-    .attr("font-size","14").attr("font-weight","10");
-
-    // 실 출도착 시간 처리
+    // 실 출도착 시간 처리용
     draw_text(box_g,2,box_h/3+4,'')
       .attr('text-anchor','start')
       .attr("id","sch_start_time").attr("font-size","12")
@@ -177,6 +197,7 @@ function draw_plot(sel_date,draw_data){
       .attr('text-anchor','end')
       .attr("id","sch_end_time").attr("font-size","12")
       .attr("fill","darkred").attr("opacity",0.9);
+    // 이후 업데이트시 위치를 업데이트된 시간으로 변경 처리
   });
   // 현재 시간 표시 라인 그리기
   var now = new Date();
@@ -192,6 +213,7 @@ function draw_plot(sel_date,draw_data){
   .style('opacity',0.5);
 }
 
+// initialize svg
 function init_draw(w,h){
   return d3.select("svg").attr("width",w).attr("height",h);
 }
@@ -242,11 +264,11 @@ function click_flight(){
   d3.select("#flight_info").attr("class","info_visible");
 }
 function show_worker(d){
-    var start_time = d.StandardTimeDeparture.replace('T',' ').substring(0,16);
-    var end_time = d.StandardTimeArrival.replace('T',' ').substring(0,16);
-    var x1 = x_scale(parseTime(start_time));
-    var x2 = x_scale(parseTime(end_time));
-    var y = y_scale(hl_map[d.ACNumber])
+    //var start_time = d.StandardTimeDeparture.replace('T',' ').substring(0,16);
+    //var end_time = d.StandardTimeArrival.replace('T',' ').substring(0,16);
+    var x1 = rtime_to_postion(d.StandardTimeDeparture);//x_scale(parseTime(start_time));
+    var x2 = rtime_to_postion(d.StandardTimeArrival);//x_scale(parseTime(end_time));
+    var y = acnumber_to_postion(d.ACNumber);// y_scale(hl_map[d.ACNumber])
     var temp_top = d3.select('#controls').style('height');
     var temp_g = d3.select('#'+d.ACNumber+'_'+d.FlightNumber);
     var sel_station = d3.select('#station').property('value')
@@ -267,16 +289,29 @@ function show_worker(d){
       .style('left',workers_left+'px')
       .style('display','block');
     //button select_event
-    d3.select('button#save_worker').on('click',(d,i,n)=>{
+    d3.select('button#save_workerD').on('click',(d,i,n)=>{
       var selected_empcd = $("select#worker option:selected").val();
       var selected_empnm = $("select#worker option:selected").text();
       console.log(selected_empcd);
-      temp_g.select('#worker').attr('empcd',selected_empcd).text(selected_empnm);
+      temp_g.select('#workerD').attr('empcd',selected_empcd).text(selected_empnm);
+    });
+    d3.select('button#save_workerA').on('click',(d,i,n)=>{
+      var selected_empcd = $("select#worker option:selected").val();
+      var selected_empnm = $("select#worker option:selected").text();
+      console.log(selected_empcd);
+      temp_g.select('#workerA').attr('empcd',selected_empcd).text(selected_empnm);
+    });
+    d3.select('button#save_workerB').on('click',(d,i,n)=>{
+      var selected_empcd = $("select#worker option:selected").val();
+      var selected_empnm = $("select#worker option:selected").text();
+      console.log(selected_empcd);
+      temp_g.select('#workerB').attr('empcd',selected_empcd).text(selected_empnm);
     });
     d3.select('button#close_worker').on('click',(d,i,n)=>{
       d3.select('#job_workers').style('display','none');
     });
 }
+// shwo worker detail information
 function show_emp(id){
   console.log(id);
     return function(){
@@ -290,6 +325,32 @@ function show_emp(id){
       //return "Name:<br/>Tel:<br/>Email:"
     }
 
+}
+// mouse pop up bubble window.
+// x,y - 화면 위치, callback - 정보처리 함수
+function bubble_show(x,y,callback){
+  //console.log('show');
+  d3.select('#tooltip_div').transition().duration(200)
+    .style("opacity", .9);
+  d3.select('#tooltip_div')
+     .style("left", x + "px")
+     .style("top", y + "px")
+     .html(callback());
+}
+function bubble_hide(){
+  //console.log('hide');
+  d3.select('#tooltip_div').transition().duration(500).style("opacity", 0);
+}
+// DB Time -> postion
+//t : DB Time format YYYY-MM-DDTHH:MI~~
+function rtime_to_postion(rtime){
+  //console.log(rtime);
+  return x_scale(parseTime(rtime.replace('T',' ').substring(0,16)));
+
+}
+// ACNumber -> position
+function acnumber_to_postion(acnum){
+  return y_scale(hl_map[acnum])
 }
 function yyyymmdd(date,del="-")
 {

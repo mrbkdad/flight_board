@@ -45,7 +45,7 @@
 
 		function init_controls(){
 			// initialize control
-      var station_list = ['GMP','ICN','CJU','CJJ','KUV','PUS']
+      var station_list = ['ALL','GMP','ICN','CJU','CJJ','KUV','PUS']
       for(station in station_list){
       	d3.select('#station').append('option')
           .attr('value',station_list[station]).text(station_list[station]);
@@ -97,6 +97,12 @@
 									.select('#sch_start_time').text(e.RampOut.slice(11,16));
 								d3.select('#'+e.ACNumber+'_'+e.FlightNumber)
 									.select('#sch_end_time').text(e.RampIn.slice(11,16));
+								// 위치 조정
+								//console.log(e.RampOut,rtime_to_postion(e.RampOut));
+								//console.log(e.ACNumber,acnumber_to_postion(e.ACNumber))
+								d3.select('#'+e.ACNumber+'_'+e.FlightNumber)
+									.transition()
+									.attr("transform","translate("+rtime_to_postion(e.RampOut)+","+(acnumber_to_postion(e.ACNumber)-box_h)+")");
 							});
 						}
 					}
@@ -114,7 +120,7 @@
 </head>
 <body>
 <div id="controls">
-	<p><H2>Flight Information Board</H2></p>
+	<p><H2>Flight Plotting Board</H2></p>
 	<p>Select date and station then push 'show list' button :
 	  <input type="date" id="log_date" name="log_date">
 	  <select id="station" name="station"></select>

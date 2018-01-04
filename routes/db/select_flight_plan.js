@@ -37,6 +37,17 @@ module.exports = (function (config,date,port,callback){
                   WHERE ( StandardTimeDeparture BETWEEN @FromDate AND @ToDate OR StandardTimeArrival BETWEEN @FromDate AND @ToDate)
                   AND ( RouteFrom = @Station OR RouteTo = @Station )
                   ORDER BY FlightKey ASC`;
+      if(port == 'ALL'){
+        query = `DECLARE @FromDate DATETIME SET @FromDate = '${date1} 04:00:00.000';
+                DECLARE @ToDate DATETIME SET @ToDate = '${date2} 04:00:00.000';
+                SELECT FlightPlanID, FlightKey, ACNumber,
+                dbo.FN_GET_AC_NUMBERID(ACNumber) AS ACNumberID,
+                LOGDate, FlightNumber, RouteFrom, RouteTo,
+                StandardTimeDeparture, StandardTimeArrival
+                FROM FlightPlan
+                WHERE ( StandardTimeDeparture BETWEEN @FromDate AND @ToDate OR StandardTimeArrival BETWEEN @FromDate AND @ToDate)
+                ORDER BY FlightKey ASC`;
+      }
       console.log(query);
       var request = new sql.Request();
       var result = {};
