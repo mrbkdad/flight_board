@@ -48,23 +48,33 @@ function flight_board(){
    window.location = url;
 }
 
-// draw board
-function draw_plot(sel_date,draw_data){
-  // initialize worker div
+//Initialize Job Worker bubble window
+function init_jobworker_bubble(){
   d3.select('#job_workers').remove();
-  d3.select('body').append('div').attr('id','job_workers')
+  let bubble_window = d3.select('body').append('div').attr('id','job_workers')
     .style('display','none').style('position','absolute');
-  d3.select('#job_workers').append('select')
+  bubble_window.append('input').attr('id','is_main').attr('name','is_main')
+    .attr('type','checkbox').property('value','M').property('checked',true);
+  bubble_window.append('label').text('M-');
+  bubble_window.append('select')
     .attr('id','worker').attr('name','worker')
     .append('option').attr('value','000000').text('작업자');
-  d3.select('#job_workers').append('button')
-    .attr('id','save_workerD').text('D');//.attr('disabled',true).text('o');
-  d3.select('#job_workers').append('button')
-    .attr('id','save_workerB').text('B');//.attr('disabled',true).text('o');
-  d3.select('#job_workers').append('button')
-    .attr('id','save_workerA').text('A');//.attr('disabled',true).text('o');
-  d3.select('#job_workers').append('button')
-    .attr('id','close_worker').text('x');//.attr('disabled',true).text('x');
+  bubble_window.append('button')
+    .attr('id','save_workerD').text('D');//.attr('disabled',true);
+  bubble_window.append('button')
+    .attr('id','save_workerB').text('B');//.attr('disabled',true);
+  bubble_window.append('button')
+    .attr('id','save_workerA').text('A');//.attr('disabled',true);
+  bubble_window.append('button')
+    .attr('id','close_worker').text('X');//.attr('disabled',true);
+  bubble_window.append('button')
+    .attr('id','save_all').text('S');//.attr('disabled',true);
+}
+
+// draw board
+function draw_plot(sel_date,sel_station,draw_data){
+  // initialize worker bubble window
+  init_jobworker_bubble()
 
 
   var hl_set = new Set();
@@ -94,9 +104,28 @@ function draw_plot(sel_date,draw_data){
   //var hl_map = {};
   var i = 1;
   Array.from(hl_set).sort().forEach(function(d){
-    draw_text(svg.append("g"),0,y_scale(i)-box_h/2,d).attr("font-size",20);
+    let hl_g = svg.append("g").attr('id',d);
+    draw_text(hl_g,0,y_scale(i)-box_h/2,d)
+      .attr('id','ACNumber').attr("font-size",20);
+    //Flight Detail info : ACModel, ACSerialNumber
+    draw_text(hl_g,0,y_scale(i)-box_h/2+10,'ACModel')
+      .attr('id','ACModel').attr("font-size",12);
+    draw_text(hl_g,0,y_scale(i)-box_h/2+20,'ACSerialNumber')
+      .attr('id','ACSerialNumber').attr("font-size",12);
     hl_map[d] = i;
     i++;
+  });
+  //read detail for hl and show
+  d3.json('/info/flight_info',(err,data)=>{
+    //console.log(data);
+    data.data.recordsets[0].forEach((d)=>{
+      //console.log(d.ACNumber,d.ACModel);
+  	   if(hl_set.has(d.ACNumber)){
+         //console.log(d);
+         d3.select('#'+d.ACNumber).select('#ACModel').text(d.ACModel);
+         d3.select('#'+d.ACNumber).select('#ACSerialNumber').text(d.ACSerialNumber);
+       }
+     });
   });
 
   //플라이트 정보 박스를 그려준다.
@@ -154,11 +183,14 @@ function draw_plot(sel_date,draw_data){
     draw_text(box_g,box_w/2,-10,'').attr("id","workerB")//worker
     .attr('text-anchor','middle')
     .attr("font-size","14").attr("font-weight","10")
-    .attr('empcd','')
+    // 작업자 코드, sub 작업자 이름과 코드 설정
+    .attr('empcd','').attr('sub_empnm','').attr('sub_empcd','')
     .on('mouseover',(d)=>{//mouse over tooltip
       //console.log(d);
       bubble_show(d3.event.pageX + 5,d3.event.pageY - 50,
-        show_emp(d3.select('#'+d.ACNumber+'_'+d.FlightNumber).select('#workerB').attr('empcd')));
+        show_emp(d3.select('#'+d.ACNumber+'_'+d.FlightNumber).select('#workerB').attr('empcd'),
+        d3.select('#'+d.ACNumber+'_'+d.FlightNumber).select('#workerB').attr('sub_empnm'))
+      );
     }).on("mouseout", function(d) {
       bubble_hide();
        //d3.select('#tooltip_div').transition().duration(500).style("opacity", 0);
@@ -166,11 +198,14 @@ function draw_plot(sel_date,draw_data){
     draw_text(box_g,0,-10,'').attr("id","workerD")//worker1
     .attr('text-anchor','middle')
     .attr("font-size","14").attr("font-weight","10")
-    .attr('empcd','')
+    // 작업자 코드, sub 작업자 이름과 코드 설정
+    .attr('empcd','').attr('sub_empnm','').attr('sub_empcd','')
     .on('mouseover',(d)=>{//mouse over tooltip
       //console.log(d);
       bubble_show(d3.event.pageX + 5,d3.event.pageY - 50,
-        show_emp(d3.select('#'+d.ACNumber+'_'+d.FlightNumber).select('#workerD').attr('empcd')));
+        show_emp(d3.select('#'+d.ACNumber+'_'+d.FlightNumber).select('#workerD').attr('empcd'),
+        d3.select('#'+d.ACNumber+'_'+d.FlightNumber).select('#workerD').attr('sub_empnm'))
+      );
     }).on("mouseout", function(d) {
       bubble_hide();
        //d3.select('#tooltip_div').transition().duration(500).style("opacity", 0);
@@ -178,11 +213,14 @@ function draw_plot(sel_date,draw_data){
     draw_text(box_g,box_w,-10,'').attr("id","workerA")//worker2
     .attr('text-anchor','middle')
     .attr("font-size","14").attr("font-weight","10")
-    .attr('empcd','')
+    // 작업자 코드, sub 작업자 이름과 코드 설정
+    .attr('empcd','').attr('sub_empnm','').attr('sub_empcd','')
     .on('mouseover',(d)=>{//mouse over tooltip
       //console.log(d);
       bubble_show(d3.event.pageX + 5,d3.event.pageY - 50,
-        show_emp(d3.select('#'+d.ACNumber+'_'+d.FlightNumber).select('#workerA').attr('empcd')));
+        show_emp(d3.select('#'+d.ACNumber+'_'+d.FlightNumber).select('#workerA').attr('empcd'),
+        d3.select('#'+d.ACNumber+'_'+d.FlightNumber).select('#workerA').attr('sub_empnm'))
+      );
     }).on("mouseout", function(d) {
       bubble_hide();
        //d3.select('#tooltip_div').transition().duration(500).style("opacity", 0);
@@ -211,6 +249,19 @@ function draw_plot(sel_date,draw_data){
   .style('stroke-width','4px')
   .style('stroke-dasharray','5 5')
   .style('opacity',0.5);
+
+  // 배정된 작업자 정보 읽어서 표시
+  d3.json('/job_workers/workers/'+sel_date+'/'+sel_station,(err,data)=>{
+    data.recordset.recordset.forEach((d)=>{
+      //console.log(d);
+      var sel_worker = d3.select('#'+d.ACNumber+'_'+d.FlightNumber).select('#worker'+d.OperationType);
+      if(d.ResponsibilityType == 'M'){
+        sel_worker.attr('empcd',d.EmpCode).text(d.EmpName);
+      }else if (d.ResponsibilityType == 'S') {
+        sel_worker.attr('sub_empcd',d.EmpCode).attr('sub_empnm',d.EmpName);
+      }
+    });
+  });
 }
 
 // initialize svg
@@ -290,35 +341,67 @@ function show_worker(d){
       .style('display','block');
     //button select_event
     d3.select('button#save_workerD').on('click',(d,i,n)=>{
-      var selected_empcd = $("select#worker option:selected").val();
-      var selected_empnm = $("select#worker option:selected").text();
-      console.log(selected_empcd);
-      temp_g.select('#workerD').attr('empcd',selected_empcd).text(selected_empnm);
+      set_worker(temp_g,'D');
     });
     d3.select('button#save_workerA').on('click',(d,i,n)=>{
-      var selected_empcd = $("select#worker option:selected").val();
-      var selected_empnm = $("select#worker option:selected").text();
-      console.log(selected_empcd);
-      temp_g.select('#workerA').attr('empcd',selected_empcd).text(selected_empnm);
+      set_worker(temp_g,'A');
     });
     d3.select('button#save_workerB').on('click',(d,i,n)=>{
-      var selected_empcd = $("select#worker option:selected").val();
-      var selected_empnm = $("select#worker option:selected").text();
-      console.log(selected_empcd);
-      temp_g.select('#workerB').attr('empcd',selected_empcd).text(selected_empnm);
+      set_worker(temp_g,'B');
     });
     d3.select('button#close_worker').on('click',(d,i,n)=>{
       d3.select('#job_workers').style('display','none');
     });
+    d3.select('button#save_all').on('click',(d,i,n)=>{
+      //d3.select('#job_workers').style('display','none');
+      save_workers(temp_g);
+    });
+}
+// save workers
+function save_workers(parent){
+  console.log(parent.data());
+  let p_data = parent.data()[0];
+  let save_data = {
+    FlightPlanID:p_data.FlightPlanID,
+    ACNumber:p_data.ACNumber,
+    WorkerList:[]
+  };
+  save_data.WorkerList.push([parent.select('#workerA').attr('empcd'),'A','M']);
+  save_data.WorkerList.push([parent.select('#workerA').attr('sub_empcd'),'A','S']);
+  save_data.WorkerList.push([parent.select('#workerB').attr('empcd'),'B','M']);
+  save_data.WorkerList.push([parent.select('#workerB').attr('sub_empcd'),'B','S']);
+  save_data.WorkerList.push([parent.select('#workerD').attr('empcd'),'D','M']);
+  save_data.WorkerList.push([parent.select('#workerD').attr('sub_empcd'),'D','S']);
+  console.log(save_data);
+  d3.json('/job_workers/save',function(error, data) {
+       console.log(data);
+       //처리 결과를 화면에 재정리
+    })
+   .header("Content-Type","application/json")
+   .send("POST", JSON.stringify(save_data));
+}
+// setting worker info on screen
+function set_worker(parent,tp){
+  var selected_empcd = $("select#worker option:selected").val();
+  var selected_empnm = $("select#worker option:selected").text();
+  var selected_worker = parent.select('#worker'+tp);
+  console.log(selected_empcd);
+  if(d3.select('#is_main').property('checked')){//main
+    selected_worker.attr('empcd',selected_empcd).text(selected_empnm);
+  }else{//sub
+    selected_worker.attr('sub_empcd',selected_empcd)
+      .attr('sub_empnm',selected_empnm);
+  }
 }
 // shwo worker detail information
-function show_emp(id){
+function show_emp(id,sub_nm=""){
   console.log(id);
     return function(){
       d3.json('/job_workers/info/'+id,(err,data)=>{
         var html = 'Name : '+data.data.recordset[0].EmpName +
                   '<br/>Email: ' + data.data.recordset[0].eMail +
-                  '<br/>Tel : '+ data.data.recordset[0].MobileNo;
+                  '<br/>Tel : '+ data.data.recordset[0].MobileNo +
+                  '<br/>Sub : '+ sub_nm;
         d3.select('#tooltip_div').html(html);
         //console.log(data.data.recordset);
       });

@@ -69,7 +69,7 @@
 						alert('Server Internal Error, please email to system administrator!')
 					}else{
 						//console.log(data.plan);
-						draw_plot(sel_date,data.plan.recordset);
+						draw_plot(sel_date,sel_station,data.plan.recordset);
 					}
 				});
 				d3.select('#show_list').property('disabled',false);
