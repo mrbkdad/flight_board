@@ -93,7 +93,6 @@ router.get('/workers/:date/:station',function(req,res,next){
             FROM FlightPlan p, FlightPlotEmployee e, EmpMaster em
             WHERE
             ( StandardTimeDeparture BETWEEN @FromDate AND @ToDate OR StandardTimeArrival BETWEEN @FromDate AND @ToDate)
-            AND ( RouteFrom = @Station OR RouteTo = @Station )
             AND p.FlightPlanID = e.FlightPlanID
             AND e.EmpCode = em.EmpCode
             AND e.Used = 'Y'

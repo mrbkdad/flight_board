@@ -14,3 +14,12 @@ function check_route(from,to){
   }
   return 'oth';
 }
+
+//raw svg loader
+function loadSVG(svgData){
+    while(!d3.select(svgData).selectAll('path').empty()){
+        d3.select('svg').node().appendChild(
+            d3.select(svgData).select('path').node());
+    }
+    d3.selectAll('path').attr('transform','translate(50,50)');
+};

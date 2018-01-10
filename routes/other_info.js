@@ -29,7 +29,7 @@ router.get('/flight_info/:hl', function(req, res, next) {
 router.get('/flight_info',function(req,res,next){
   console.log('/flight_info',req.params);
   var query = `SELECT b.ACTypeID, b.ACType, b.Remark
-	       , a.ACNumberID, a.ACNumber, a.ACModel, a.ACSerialNumber, a.EffectivityIPC, a.EffectivityOtherManual
+	       , a.ACNumberID, a.ACNumber, a.ACModel, a.ACSerialNumber, a.LineNumber, a.EffectivityIPC, a.EffectivityOtherManual
 	       , a.ManufactureDate, a.SELCALCode, a.Engine1Type, a.Engine1SerialNumber, a.Engine2Type, a.Engine2SerialNumber
 	       , a.APUType, a.APUSerialNumber
 	       , a.SeatCapacity
