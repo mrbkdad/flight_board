@@ -146,10 +146,13 @@ function draw_plot(sel_date,sel_station,draw_data){
     // 2. 출도착지 하단 앞 뒤 출력
     // 3. 시간 출력 상단 앞 뒤 출력
     // 4. 작업자 정보 출력용 표시(빈값으로) - 이후 정보가 있을경우 처리
+    // 5. flight msg - 박스 아래
+    // 6. 출도착 시간 업데이트 - 기존 시간 아래 붉은색 표시
+    // 7. 게이트 표시 - 출도착 공항 옆에 표시
     // text-anchor 속성을 이용하여 위치 조정
     draw_text(box_g,box_w/2,box_h/2+10,d.FlightNumber)
       .attr('text-anchor','middle')
-      .attr("id","FlightNumber").attr("font-size",box_w>100?"28":"19")
+      .attr("id","FlightNumber_"+d.FlightNumber).attr("font-size",box_w>100?"28":"19")
       //mouse click event
       .on('click',show_worker);
     draw_text(box_g,2,box_h-5,d.RouteFrom)
@@ -224,7 +227,14 @@ function draw_plot(sel_date,sel_station,draw_data){
       .attr('text-anchor','end')
       .attr("id","sch_end_time").attr("font-size","12")
       .attr("fill","darkred").attr("opacity",0.9);
-    // 이후 업데이트시 위치를 업데이트된 시간으로 변경 처리
+    // 게이트 번호 표시
+    draw_text(box_g,-1,box_h-5,"")
+      .attr('text-anchor','end')
+      .attr("id","GateFrom_"+d.FlightNumber).attr("font-size","13");
+    draw_text(box_g,box_w+1,box_h-5,"")//2+box_w-33
+      .attr('text-anchor','start')
+      .attr("id","GateTo_"+d.FlightNumber).attr("font-size","13");
+
   });
   // 현재 시간 표시 라인 그리기
   var now = new Date();

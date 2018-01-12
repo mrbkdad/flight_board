@@ -109,6 +109,28 @@
 				});
 				d3.select('#update_list').property('disabled',false);
 			});
+
+			// 게이트 데이터 업데이트
+			d3.select('#gate_list').property('disabled',false);
+			d3.select('#gate_list').on('click',()=>{
+				d3.select('#gate_list').property('disabled',true);
+				var sel_date = d3.select('#log_date').property('value');
+				var sel_station = d3.select('#station').property('value');
+				var csv_url = '/data/'+sel_station+'_'+sel_date+'.csv';
+				console.log(csv_url)
+				d3.csv(csv_url,(err,data)=>{
+					data.forEach((d)=>{
+						//해당 객체 찾기 - 출발 GateFrom_flt#, 도착 GateTo_flt#
+						//게이트 번호 붙이기
+						//console.log(d);
+						if(d.flt != ""){
+							if(d.type == 'D') d3.select('#GateFrom_'+d.flt).text(d.gate+'-');
+							else d3.select('#GateTo_'+d.flt).text('-'+d.gate);
+						}
+					});
+				});
+				d3.select('#gate_list').property('disabled',false);
+			});
 		}
 
     $('document').ready(()=>{
@@ -126,6 +148,7 @@
 	  <select id="station" name="station"></select>
 	  <button id="show_list" disabled=true>show list</button>
 		<button id="update_list" disabled=true>update</button>
+		<button id="gate_list" disabled=true>gate</button>
   </p>
 </div>
 <div id="flight_board">
