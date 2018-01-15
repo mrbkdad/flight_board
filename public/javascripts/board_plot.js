@@ -476,8 +476,10 @@ function show_msg(msg){
 // show daily check
 function set_daily_check(parent){
   d3.text('/images/flight.svg',(d)=>{
+    var x = parent.select('rect').attr('width')-30;
+    var y = -25
   	var daily_check = parent.append('path').attr('d',d)
-      .attr('transform','translate(40,-25)').attr('opacity','0.6');
+      .attr('transform','translate('+x+','+y+')').attr('opacity','0.6');
   });
 }
 // mouse pop up bubble window.
