@@ -10,6 +10,7 @@ var index = require('./routes/index');
 var users = require('./routes/users');
 var flight_board = require('./routes/flight_board');
 var job_workers = require('./routes/job_workers');
+var job_descs = require('./routes/job_descriptions');
 var detail_info = require('./routes/other_info');
 
 var app = express();
@@ -39,6 +40,7 @@ app.use('/', index);
 app.use('/users', users);
 app.use('/flight_board', flight_board);
 app.use('/job_workers', job_workers);
+app.use('/job_descs', job_descs);
 app.use('/info',detail_info);
 
 // catch 404 and forward to error handler

@@ -133,7 +133,7 @@ function draw_plot(sel_date,sel_station,draw_data){
         info:info,
     }).datum(d);// data binding
     box_g.on('mouseover',(d)=>{
-      var msg = box_g.attr('msg-tooltip')
+      var msg = box_g.attr('msg-tooltip');//jab descriptions
       //console.log(msg);
       if(!msg==""){
         bubble_show(d3.event.pageX+20,d3.event.pageY-60,show_msg(msg));
@@ -261,6 +261,21 @@ function draw_plot(sel_date,sel_station,draw_data){
       }
     });
   });
+  // 입력된 메시지 정보 읽어소 표시
+  d3.json('/job_descs/'+sel_date+'/'+sel_station,(err,data)=>{
+    data.recordset.recordset.forEach((d)=>{
+      console.log(d);
+      var sel_parent = d3.select('#'+d.ACNumber+'_'+d.FlightNumber);
+      if(d.OperationType == 'M'){//main description
+        sel_parent.attr('msg-tooltip',d.Remarks);
+        sel_parent.select('#flight_msg').text(d.Remarks);
+      }else if(d.OperationType == 'C'){//daily check
+        sel_parent.attr('daily_check','true');
+        show_daily_check(sel_parent);
+      }
+    });
+  });
+
 }
 
 // initialize svg
@@ -332,22 +347,20 @@ function init_jobworker_bubble(){
     .attr('id','save_workerA').text('A');
   bubble_window.append('button')
     .attr('id','save_all').text('S');
-  bubble_window.append('button')
-    .attr('id','show_msg').text('↓');
+  //bubble_window.append('button')
+  //  .attr('id','show_msg').text('↓');
   bubble_window.append('button')
     .attr('id','close_worker').text('x');
   let msg_div = bubble_window.append('div').attr('id','msg_div')
-    .attr('align','center').style('display','none');
+    .attr('align','center');//.style('display','none');
   msg_div.append('input').attr('size','25').attr('id','job_msg')
   .attr('type','text').style('height','18px');
   msg_div.append('button')
     .attr('id','save_msg').text('M');
   msg_div.append('button')
-    .attr('id','save_ip_msg').text('IP');
-  msg_div.append('button')
-    .attr('id','daily_check').text('★');
-  msg_div.append('button')
-    .attr('id','hide_msg').text('↑');
+    .attr('id','daily_check').text('C');
+  //msg_div.append('button')
+  //  .attr('id','hide_msg').text('↑');
 }
 function show_worker(d){
     //var start_time = d.StandardTimeDeparture.replace('T',' ').substring(0,16);
@@ -404,11 +417,8 @@ function show_worker(d){
     d3.select('button#save_msg').on('click',(d,i,n)=>{
       var msg = d3.select('#job_msg').property('value');
       temp_g.attr('msg-tooltip',msg);
-    });
-    d3.select('button#save_ip_msg').on('click',(d,i,n)=>{
-      var msg = d3.select('#job_msg').property('value');
-      temp_g.attr('msg-tooltip',msg);
       temp_g.select('#flight_msg').text(msg);
+      save_descs(temp_g);// save descriptions
     });
 }
 // save workers
@@ -465,6 +475,23 @@ function show_emp(id,sub_nm=""){
     }
 
 }
+// save descriptions
+function save_descs(parent){
+  console.log(parent.data());
+  let p_data = parent.data()[0];
+  let save_data = {
+    FlightPlanID:p_data.FlightPlanID,
+    ACNumber:p_data.ACNumber,
+    OperationType:'M',
+    Remarks:parent.attr('msg-tooltip')
+  };
+  console.log(save_data);
+  d3.json('/job_descs/save',function(error, data) {
+       //console.log(data);
+    })
+   .header("Content-Type","application/json")
+   .send("POST", JSON.stringify(save_data));
+}
 // shwo msg tooltip - tooltip callback
 // return attribute msg-tooltip value
 function show_msg(msg){
@@ -475,12 +502,45 @@ function show_msg(msg){
 }
 // show daily check
 function set_daily_check(parent){
+  let daily_check = parent.attr('daily_check');
+  //console.log(daily_check);
+  if(daily_check && daily_check != 'false'){
+    parent.attr('daily_check','false');
+    parent.select('#daily_check').remove();
+    save_daily_check(parent,'N');
+  }else{
+    parent.attr('daily_check','true');
+    show_daily_check(parent);
+    save_daily_check(parent,'Y');
+  }
+}
+function show_daily_check(parent){
   d3.text('/images/flight.svg',(d)=>{
     var x = parent.select('rect').attr('width')-30;
     var y = -25
-  	var daily_check = parent.append('path').attr('d',d)
-      .attr('transform','translate('+x+','+y+')').attr('opacity','0.6');
+    var daily_check = parent.append('path').attr('d',d)
+      .attr('transform','translate('+x+','+y+')')
+      .attr('id','daily_check').attr('opacity','0.6');
   });
+}
+// save daily check
+function save_daily_check(parent,used){
+  console.log(parent.data());
+  let p_data = parent.data()[0];
+  let save_data = {
+    FlightPlanID:p_data.FlightPlanID,
+    ACNumber:p_data.ACNumber,
+    OperationType:'C',//daily check type
+    Remarks:'Daily Check',
+    Used:used
+  };
+  console.log(save_data);
+  d3.json('/job_descs/daily_check',function(error, data) {
+       //console.log(data);
+       //처리 결과를 화면에 재정리
+    })
+   .header("Content-Type","application/json")
+   .send("POST", JSON.stringify(save_data));
 }
 // mouse pop up bubble window.
 // x,y - 화면 위치, callback - 정보처리 함수
