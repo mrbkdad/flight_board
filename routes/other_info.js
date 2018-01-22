@@ -11,7 +11,7 @@ router.get('/flight_info/:hl', function(req, res, next) {
 	       , a.ACNumberID, a.ACNumber, a.ACModel, a.ACSerialNumber, a.EffectivityIPC, a.EffectivityOtherManual
 	       , a.ManufactureDate, a.SELCALCode, a.Engine1Type, a.Engine1SerialNumber, a.Engine2Type, a.Engine2SerialNumber
 	       , a.APUType, a.APUSerialNumber
-	       , a.SeatCapacity
+	       , a.SeatCapacity, a.Wheel
 	FROM ACNumber a JOIN ACType b
 	     ON a.ACTypeID = b.ACTypeID
 	WHERE a.Used = 'Y' AND b.Used = 'Y' and ACNumber='{hl}}'`;
@@ -32,7 +32,7 @@ router.get('/flight_info',function(req,res,next){
 	       , a.ACNumberID, a.ACNumber, a.ACModel, a.ACSerialNumber, a.LineNumber, a.EffectivityIPC, a.EffectivityOtherManual
 	       , a.ManufactureDate, a.SELCALCode, a.Engine1Type, a.Engine1SerialNumber, a.Engine2Type, a.Engine2SerialNumber
 	       , a.APUType, a.APUSerialNumber
-	       , a.SeatCapacity
+	       , a.SeatCapacity, a.Wheel
 	FROM ACNumber a JOIN ACType b
 	     ON a.ACTypeID = b.ACTypeID
 	WHERE a.Used = 'Y' AND b.Used = 'Y'`;

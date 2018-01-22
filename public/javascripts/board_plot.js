@@ -27,13 +27,13 @@ function select_event(){
   var json_url = '/flight_plan/'+sel_date+'/'+sel_station;
   d3.json(json_url,function(err,data){
     if(err){
-      console.log(err)
-      console.log(data)
+      console.log(err);
+      console.log(data);
       alert('Server Internal Error, please email to system administrator!')
     }else{
-      console.log(data.plan)
-      plot_data = data.plan
-      draw_plot(sel_date,data.plan)
+      console.log(data.plan);
+      plot_data = data.plan;
+      draw_plot(sel_date,data.plan);
     }
   });
 }
@@ -51,8 +51,7 @@ function flight_board(){
 // draw board
 function draw_plot(sel_date,sel_station,draw_data){
   // initialize worker bubble window
-  init_jobworker_bubble()
-
+  init_jobworker_bubble();
 
   var hl_set = new Set();
   draw_data.forEach(function(d){hl_set.add(d.ACNumber);});
@@ -87,10 +86,10 @@ function draw_plot(sel_date,sel_station,draw_data){
     draw_text(hl_g,0,y_scale(i)-box_h/2,d)
       .attr('id','ACNumber').attr("font-size",20);
     //Flight Detail info : ACModel, ACSerialNumber
-    draw_text(hl_g,0,y_scale(i)-box_h/2+10,'LineNumber')
-      .attr('id','LineNumber').attr("font-size",12);
-    draw_text(hl_g,0,y_scale(i)-box_h/2+20,'EffectivityIPC')
-      .attr('id','EffectivityIPC').attr("font-size",12);
+    draw_text(hl_g,0,y_scale(i)-box_h/2+12,'EffectivityIPC')
+      .attr('id','EffectivityIPC').attr("font-size",14);
+    draw_text(hl_g,0,y_scale(i)-box_h/2+24,'Wheel')
+      .attr('id','Wheel').attr("font-size",14);
     hl_map[d] = i;
     i++;
   });
@@ -100,8 +99,8 @@ function draw_plot(sel_date,sel_station,draw_data){
     data.data.recordsets[0].forEach((d)=>{
       //console.log(d.LineNumber,d.EffectivityIPC);
   	   if(hl_set.has(d.ACNumber)){
-         d3.select('#'+d.ACNumber).select('#LineNumber').text(d.LineNumber);
          d3.select('#'+d.ACNumber).select('#EffectivityIPC').text(d.EffectivityIPC);
+         d3.select('#'+d.ACNumber).select('#Wheel').text(d.Wheel);
        }
      });
   });
