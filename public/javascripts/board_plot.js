@@ -113,10 +113,10 @@ function draw_plot(sel_date,sel_station,draw_data){
     var x2 = rtime_to_postion(d.StandardTimeArrival);//x_scale(parseTime(end_time));
     var y = acnumber_to_postion(d.ACNumber);// y_scale(hl_map[d.ACNumber])
 
-    var info = d.ACNumber+"/"+d.FlightNumber+"/"
-      +d.RouteFrom+"/"+d.RouteTo+"/"
-      +start_time+"/"+end_time;
-    var box_w = x2 - x1
+    var info = d.ACNumber+"/"+d.FlightNumber+"/"+
+      d.RouteFrom+"/"+d.RouteTo+"/"+
+      start_time+"/"+end_time;
+    var box_w = x2 - x1;
     if(box_w < box_min){
       box_w = box_min;
     }
@@ -134,7 +134,7 @@ function draw_plot(sel_date,sel_station,draw_data){
     box_g.on('mouseover',(d)=>{
       var msg = box_g.attr('msg-tooltip');//jab descriptions
       //console.log(msg);
-      if(!msg==""){
+      if(!(msg=="")){
         bubble_show(d3.event.pageX+20,d3.event.pageY-60,show_msg(msg));
       }
     }).on('mouseout',(d)=>{bubble_hide();});
