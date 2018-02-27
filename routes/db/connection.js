@@ -2,7 +2,7 @@ var sql = require('mssql');
 // for db processing
 var config = require('./db_info');
 // development || production
-var connect_info = process.env.db_info == 'real'?config.real:config.dev;
+var connect_info = process.env.DB_CONFIG == 'real'?config.real:config.dev;
 console.log('DB Connection Information : ',connect_info);
 
 var for_query_connection;
