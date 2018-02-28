@@ -132,9 +132,9 @@ function draw_plot(sel_date,sel_station,draw_data){
         info:info,
     }).datum(d);// data binding
     box_g.on('mouseover',(d)=>{
-      var msg = box_g.attr('msg-tooltip');//jab descriptions
+      var msg = box_g.attr('msg-tooltip');//job descriptions
       //console.log(msg);
-      if(!(msg=="")){
+      if((msg!==null) & (msg!=="")){
         bubble_show(d3.event.pageX+20,d3.event.pageY-60,show_msg(msg));
       }
     }).on('mouseout',(d)=>{bubble_hide();});
@@ -263,7 +263,7 @@ function draw_plot(sel_date,sel_station,draw_data){
   // 입력된 메시지 정보 읽어소 표시
   d3.json('/job_descs/'+sel_date+'/'+sel_station,(err,data)=>{
     data.recordset.recordset.forEach((d)=>{
-      console.log(d);
+      //console.log(d);
       var sel_parent = d3.select('#'+d.ACNumber+'_'+d.FlightNumber);
       if(d.OperationType == 'M'){//main description
         sel_parent.attr('msg-tooltip',d.Remarks);
