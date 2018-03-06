@@ -47,7 +47,7 @@ module.exports = new LocalStrategy({
 				returnUrl:""
 			  })
 			  .then( gwreq => {
-				console.log(gwreq);
+				// console.log(gwreq.data);
 				var sess = {
 					userid: result[0].EmpCode,
 					username: result[0].EmpName,
@@ -58,7 +58,7 @@ module.exports = new LocalStrategy({
 				return done(null,sess)
 			  })
 			  .catch(gwreq => {
-				console.log(gwreq);
+				// console.log(gwreq.response.data);
 				return done(null, false, req.flash('loginMessage', gwreq.response.data.message)); 
 			  });
 			//**** groupware login 이용

@@ -1,4 +1,5 @@
 var fs = require('fs');
+var path = require('path');
 var express = require('express');
 var router = express.Router();
 
@@ -25,7 +26,8 @@ router.get('/:file', function(req, res, next) {
         req.flash('loginMessage', '정상적으로 접속해주세요.');
         res.redirect("/");
     }else{
-        var file = `${__dirname}\\..\\public\\${req.params.file}`;
+        // var file = `${__dirname}\\..\\public\\${req.params.file}`;
+        var file = path.join(__dirname,'..','public',req.params.file);
         send_file(file,res,next);
     }
 });
