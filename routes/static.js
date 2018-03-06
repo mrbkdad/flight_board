@@ -32,7 +32,8 @@ router.get('/:file', function(req, res, next) {
     }
 });
 router.get('/:file_path/:file', function(req, res, next) {
-    var file = `${__dirname}\\..\\public\\${req.params.file_path}\\${req.params.file}`;
+    //var file = `${__dirname}\\..\\public\\${req.params.file_path}\\${req.params.file}`;
+    var file = path.join(__dirname,'..','public',req.params.file_path,req.params.file);
     send_file(file,res,next);
 });
 module.exports = router;
