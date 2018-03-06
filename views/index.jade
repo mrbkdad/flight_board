@@ -3,21 +3,22 @@ extends layout
 block content
   h1= title
   p Welcome to #{title}
-  image(src='/images/flight_board_main.PNG' width='60')
+  image(src='/static/images/flight_board_main.PNG' width='60')
   hr
   h2 Usage
-  form(action="/board",method="post")
+  if message.length > 0
+    h3
+      font(color='red') #{message}
+  form(action="/login",method="post")
     ul
       li
         p
           | ID : 
-          input(type="text",name="userid",placeholder="userId")
-      li
+          input(type="text",name="userid",placeholder="username")
         p
           | Password : 
           input(type="password",name="password",placeholder="password")
-      li
-        button(name="enter") go
+        button(name="enter") enter
   h2 Site Map
   ul
     li
@@ -29,6 +30,6 @@ block content
       p contact : puniculla@eastarjet.com
     li
       p
-        Server Side : Node.js
+        | Server Side : Node.js
         br
-        Client Side : SVG by Using D3js
+        | Client Side : SVG by Using D3js

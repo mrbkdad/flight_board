@@ -5,13 +5,9 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var session = require('express-session');
+var passport = require('passport');
+var flash = require('connect-flash');
 
-var index = require('./routes/index');
-var users = require('./routes/users');
-var flight_board = require('./routes/flight_board');
-var job_workers = require('./routes/job_workers');
-var job_descs = require('./routes/job_descriptions');
-var detail_info = require('./routes/other_info');
 
 var app = express();
 // production
@@ -28,21 +24,34 @@ app.use(logger('short'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+//app.use(express.static(path.join(__dirname, 'public')));
 // session
 app.use(session({
-  secret:'secret key',
-  resave:false,
+  secret:'%%flight_board$$',
+  resave:true,
   saveUninitialized:true
 }));
+//passport
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(flash());
 
+
+var index = require('./routes/index');
+var user_info = require('./routes/user_info');
+var flight_board = require('./routes/flight_board');
+var job_workers = require('./routes/job_workers');
+var job_descs = require('./routes/job_descriptions');
+var detail_info = require('./routes/other_info');
+var static = require('./routes/static');
 
 app.use('/', index);
-app.use('/users', users);
+app.use('/user', user_info);
 app.use('/flight_board', flight_board);
 app.use('/job_workers', job_workers);
 app.use('/job_descs', job_descs);
 app.use('/info',detail_info);
+app.use('/static',static);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

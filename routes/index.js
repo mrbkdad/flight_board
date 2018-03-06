@@ -1,17 +1,29 @@
 var express = require('express');
+var passport = require('passport');
 var router = express.Router();
+
+var login = require('./login');
+login();
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index', { title: 'EastarJet Flight Plotting Board System!' });
+  res.render('index', {
+    title: 'EastarJet Flight Plotting Board System!',
+    message: req.flash('loginMessage')
+  });
 });
 
 router.get('/help', function(req, res, next) {
   res.render('help', { title: 'EastarJet Flight Plotting Board System!' });
 });
 
-router.post('/board',function(req,res,next){
-  res.redirect('/daily_flight_board.html');
+router.post('/login',passport.authenticate('login',{
+  successRedirect:'/static/daily_flight_board.html',
+  failureRedirect:'/',
+  failureFlash: true
+}),(req,res)=>{
+  console.log(req);
 });
 
+console.log("Index.js ready!")
 module.exports = router;
