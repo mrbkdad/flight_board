@@ -21,7 +21,7 @@ function send_file(file,res,next){
 
 router.get('/:file', function(req, res, next) {
     console.log(req.session.passport);
-    if(!req.session.passport){
+    if(!req.session.passport && process.env.DB_CONFIG == 'real'){
         // login page
         req.flash('loginMessage', '정상적으로 접속해주세요.');
         res.redirect("/");

@@ -8,7 +8,7 @@ login();
 /* GET home page. */
 router.get('/', function(req, res, next) {
   res.render('index', {
-    title: 'EastarJet Flight Plotting Board System!',
+    title: 'EastarJet Flight Plotting Board!',
     message: req.flash('loginMessage')
   });
 });

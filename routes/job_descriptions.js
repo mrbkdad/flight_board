@@ -11,27 +11,35 @@ router.get('/:date/:station',function(req,res,next){
   var date1 = util.getdate(date,0);
   var date2 = util.getdate(date,1);
   //var date2 = getDate(date,1);
+  // DECLARE @FromDate DATETIME SET @FromDate = '${date1} 04:00:00.000';
+  // DECLARE @ToDate DATETIME SET @ToDate = '${date2} 04:00:00.000';
   var query = `DECLARE @Station NVARCHAR(3) SET @Station = '${port}';
-              DECLARE @FromDate DATETIME SET @FromDate = '${date1} 04:00:00.000';
-              DECLARE @ToDate DATETIME SET @ToDate = '${date2} 04:00:00.000';
-              SELECT p.FlightPlanID, ACNumber, FlightNumber, OperationType, Remarks
-              FROM FlightPlan p, FlightPlot d
-              WHERE
-              ( StandardTimeDeparture BETWEEN @FromDate AND @ToDate OR StandardTimeArrival BETWEEN @FromDate AND @ToDate)
-              AND ( RouteFrom = @Station OR RouteTo = @Station )
-              AND p.FlightPlanID = d.FlightPlanID
-              AND d.Used = 'Y'
-              ORDER BY FlightKey ASC`
+    DECLARE @SelFromDate DATETIME SET @SelFromDate = '${date1} 04:00:00.000';
+    DECLARE @SelToDate DATETIME SET @SelToDate = '${date2} 04:00:00.000';
+    DECLARE @UTCValue TINYINT SET @UTCValue = 9
+    DECLARE @FromDate DATETIME SET @FromDate = DATEADD(HH,-@UTCValue,CONVERT(DATETIME,@SelFromDate));
+    DECLARE @ToDate DATETIME SET @ToDate = DATEADD(HH,-@UTCValue,CONVERT(DATETIME,@SelToDate));
+    SELECT p.FlightPlanID, ACNumber, FlightNumber, OperationType, Remarks
+    FROM FlightPlan p, FlightPlot d
+    WHERE
+    ( StandardTimeDeparture BETWEEN @FromDate AND @ToDate OR StandardTimeArrival BETWEEN @FromDate AND @ToDate)
+    AND ( RouteFrom = @Station OR RouteTo = @Station )
+    AND p.FlightPlanID = d.FlightPlanID
+    AND d.Used = 'Y'
+    ORDER BY FlightKey ASC`
   if(port == 'ALL'){
-    query = `DECLARE @FromDate DATETIME SET @FromDate = '${date1} 04:00:00.000';
-            DECLARE @ToDate DATETIME SET @ToDate = '${date2} 04:00:00.000';
-            SELECT p.FlightPlanID, ACNumber, FlightNumber, OperationType, Remarks
-            FROM FlightPlan p, FlightPlot d
-            WHERE
-            ( StandardTimeDeparture BETWEEN @FromDate AND @ToDate OR StandardTimeArrival BETWEEN @FromDate AND @ToDate)
-            AND p.FlightPlanID = d.FlightPlanID
-            AND d.Used = 'Y'
-            ORDER BY FlightKey ASC`
+    query = `DECLARE @SelFromDate DATETIME SET @SelFromDate = '${date1} 04:00:00.000';
+      DECLARE @SelToDate DATETIME SET @SelToDate = '${date2} 04:00:00.000';
+      DECLARE @UTCValue TINYINT SET @UTCValue = 9
+      DECLARE @FromDate DATETIME SET @FromDate = DATEADD(HH,-@UTCValue,CONVERT(DATETIME,@SelFromDate));
+      DECLARE @ToDate DATETIME SET @ToDate = DATEADD(HH,-@UTCValue,CONVERT(DATETIME,@SelToDate));
+      SELECT p.FlightPlanID, ACNumber, FlightNumber, OperationType, Remarks
+      FROM FlightPlan p, FlightPlot d
+      WHERE
+      ( StandardTimeDeparture BETWEEN @FromDate AND @ToDate OR StandardTimeArrival BETWEEN @FromDate AND @ToDate)
+      AND p.FlightPlanID = d.FlightPlanID
+      AND d.Used = 'Y'
+      ORDER BY FlightKey ASC`
   }
   console.log(query);
 

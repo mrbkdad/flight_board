@@ -1,8 +1,10 @@
 // init value
 var svg_w = 1800;//board size
+var svg_h_unit = 30;//adjust board height
 var pad_left = 80, pad_right = 30, pad_top = 30, pad_bottom = 30;
 var box_h = 55;
 var box_min = 70; // min width of box
+var msg_mark = '@';//text icon
 
 // time scale
 var xscale_start = '03:00';
@@ -52,11 +54,12 @@ function flight_board(){
 function draw_plot(sel_date,sel_station,draw_data){
   // initialize worker bubble window
   init_jobworker_bubble();
+  init_lovchk_bubble();
 
   var hl_set = new Set();
   draw_data.forEach(function(d){hl_set.add(d.ACNumber);});
   // y scale size 조정, hl# list 갯수만큼 생성 할 수 있도록
-  var svg_height = (box_h+40)*(hl_set.size) + pad_top+pad_bottom;
+  var svg_height = (box_h+svg_h_unit)*(hl_set.size) + pad_top+pad_bottom;
 
   svg = init_draw(svg_w,svg_height);
   svg.selectAll("g").remove();
@@ -213,7 +216,7 @@ function draw_plot(sel_date,sel_station,draw_data){
        //d3.select('#tooltip_div').transition().duration(500).style("opacity", 0);
     });
     // flight msg 고정용
-    draw_text(box_g,box_w/2,box_h+12,'')
+    draw_text(box_g,box_w/2,box_h+10,'')
       .attr('text-anchor','middle').style('fill','darkred')
       .attr("id","flight_msg").attr("font-size","14");
 
@@ -267,52 +270,16 @@ function draw_plot(sel_date,sel_station,draw_data){
       var sel_parent = d3.select('#'+d.ACNumber+'_'+d.FlightNumber);
       if(d.OperationType == 'M'){//main description
         sel_parent.attr('msg-tooltip',d.Remarks);
-        sel_parent.select('#flight_msg').text(d.Remarks);
-      }else if(d.OperationType == 'C'){//daily check
+        sel_parent.select('#flight_msg').text(msg_mark);
+      }else if(d.OperationType == 'C'){//LOV check
         sel_parent.attr('daily_check','true');
-        show_daily_check(sel_parent);
+        show_lov_check(sel_parent,d.Remarks);
       }
     });
   });
 
 }
 
-// initialize svg
-function init_draw(w,h){
-  return d3.select("svg").attr("width",w).attr("height",h);
-}
-// domain extent와 range extent를 이용하여 linear scale 생성
-function linear_scale(d_extent,r_extent){
-  return d3.scaleLinear().domain(d_extent).range(r_extent);
-}
-// r,x,y 값 형태의 데이터를 받아 color 로 circle plot
-function draw_circle(p_obj,cname,cdata,ccolor){
-  p_obj.append("g").selectAll(cname).data(cdata).enter()
-    .append("circle").attr("class",cname+"_circle")
-    .attr("r",function(d){ return d.r;})
-    .attr("cx",function(d){return d.x;})
-    .attr("cy",function(d){return d.y;})
-    .attr("fill",ccolor);
-}
-
-// x,y,width,height 값 형태의 데이터를 box plot
-function draw_box(p_obj,cname,cdata){
-  var box_g = p_obj.append("g").attr("class","box").attr("id",cname)
-    .attr("transform", "translate("+cdata.x+","+(cdata.y-box_h)+")");
-  box_g.append("rect").attr("id",cname+"_rect").attr("class",check_route(cdata.from,cdata.to))//.attr("class","range")
-    .attr("width",cdata.width).attr("height",cdata.height)
-    //.attr("y",-cdata.height/2)//.attr("x",-cdata.width/2)
-    .attr("info",cdata.info);
-  return box_g;
-}
-function draw_line(p_obj,x1,x2,y1,y2){
-  return p_obj.append("line").attr("class","box_line")
-    .attr("x1",x1).attr("x2",x2).attr("y1",y1).attr("y2",y2);
-}
-function draw_text(p_obj,x,y,text,cls="draw_text"){
-  return p_obj.append("text").attr("class",cls)
-    .attr("x",x).attr("y",y).text(text);
-}
 var selected_box = undefined;
 function click_flight(){
   //console.log(d3.select(this).attr("info"));
@@ -370,7 +337,7 @@ function show_worker(d){
     var temp_top = d3.select('#controls').style('height');
     var temp_g = d3.select('#'+d.ACNumber+'_'+d.FlightNumber);
     var sel_station = d3.select('#station').property('value')
-    var workers_top = parseFloat(temp_top)+y+30;
+    var workers_top = parseFloat(temp_top)+y+5;
     var workers_left = x1+10;
     // setup data
     d3.json('/job_workers/'+sel_station,(err,data)=>{
@@ -405,7 +372,7 @@ function show_worker(d){
     });
     d3.select('button#daily_check').on('click',(d,i,n)=>{
       //daily_check
-      set_daily_check(temp_g);
+      set_lov_check(temp_g,0);// set default lov
     });
     d3.select('button#show_msg').on('click',(d,i,n)=>{
       d3.select('#msg_div').style('display','block');
@@ -416,7 +383,7 @@ function show_worker(d){
     d3.select('button#save_msg').on('click',(d,i,n)=>{
       var msg = d3.select('#job_msg').property('value');
       temp_g.attr('msg-tooltip',msg);
-      temp_g.select('#flight_msg').text(msg);
+      temp_g.select('#flight_msg').text(msg_mark);
       save_descs(temp_g);// save descriptions
     });
 }
@@ -491,46 +458,45 @@ function save_descs(parent){
    .header("Content-Type","application/json")
    .send("POST", JSON.stringify(save_data));
 }
-// shwo msg tooltip - tooltip callback
-// return attribute msg-tooltip value
-function show_msg(msg){
-  //console.log(msg);
-  return function(){
-    return '<p>'+msg+'</p>';
-  }
-}
 // show daily check
-function set_daily_check(parent){
+function set_lov_check(parent,code){
   let daily_check = parent.attr('daily_check');
   //console.log(daily_check);
   if(daily_check && daily_check != 'false'){
     parent.attr('daily_check','false');
     parent.select('#daily_check').remove();
-    save_daily_check(parent,'N');
+    save_lov_check(parent,'N',code);
   }else{
     parent.attr('daily_check','true');
-    show_daily_check(parent);
-    save_daily_check(parent,'Y');
+    show_lov_check(parent,check_lov.value(code));
+    save_lov_check(parent,'Y',code);
   }
 }
-function show_daily_check(parent){
-  d3.text('/images/flight.svg',(d)=>{
+function show_lov_check(parent,lov_msg){
+  d3.text('/static/images/flight.svg',(d)=>{
     var x = parent.select('rect').attr('width')-30;
     var y = -25
-    var daily_check = parent.append('path').attr('d',d)
-      .attr('transform','translate('+x+','+y+')')
-      .attr('id','daily_check').attr('opacity','0.6');
+    var daily_check = parent.append('g')
+    .attr('id','daily_check')
+    .attr('transform','translate('+x+','+y+')');
+    daily_check.append('path').attr('d',d)
+      .attr('opacity','0.5');
+    draw_text(daily_check,40,80,lov_msg)
+    .attr('text-anchor','start')
+    .attr("id","check_txt").attr("lov",lov_msg)
+    .attr("font-size","14").attr("fill","darkred")
+    .on("click",show_lovchk_bubble);
   });
 }
 // save daily check
-function save_daily_check(parent,used){
+function save_lov_check(parent,used,code){
   console.log(parent.data());
   let p_data = parent.data()[0];
   let save_data = {
     FlightPlanID:p_data.FlightPlanID,
     ACNumber:p_data.ACNumber,
     OperationType:'C',//daily check type
-    Remarks:'Daily Check',
+    Remarks: check_lov.value(code),// LOV MSG
     Used:used
   };
   console.log(save_data);
@@ -541,40 +507,50 @@ function save_daily_check(parent,used){
    .header("Content-Type","application/json")
    .send("POST", JSON.stringify(save_data));
 }
-// mouse pop up bubble window.
-// x,y - 화면 위치, callback - 정보처리 함수
-function bubble_show(x,y,callback){
-  //console.log('show');
-  d3.select('#tooltip_div').transition().duration(200)
-    .style("opacity", .9);
-  d3.select('#tooltip_div')
-     .style("left", x + "px")
-     .style("top", y + "px")
-     .html(callback());
+//Initialize LOV Check bubble window
+function init_lovchk_bubble(){
+  d3.select('#lov_checker').remove();
+  let bubble_window = d3.select('body').append('div').attr('id','lov_checker')
+    .style('display','none').style('position','absolute').style('height','10px');
+  bubble_window.append('select')
+    .attr('id','lov_chk').attr('name','lov_chk');
+  check_lov.table().forEach(e => {
+    bubble_window.select('#lov_chk')
+    .append('option').attr('value',e[0]).text(e[1]);
+  });
+  bubble_window.append('button')
+    .attr('id','save_lovchk').text('S');
+  bubble_window.append('button')
+    .attr('id','close_lovchk').text('x')
+    .on("click",()=>{d3.select("#lov_checker").style("display",'none')});
 }
-function bubble_hide(){
-  //console.log('hide');
-  d3.select('#tooltip_div').transition().duration(500).style("opacity", 0);
-}
-// DB Time -> postion
-//t : DB Time format YYYY-MM-DDTHH:MI~~
-function rtime_to_postion(rtime){
-  //console.log(rtime);
-  return x_scale(parseTime(rtime.replace('T',' ').substring(0,16)));
+function show_lovchk_bubble(d){
+  //console.log(d);
+  var x1 = rtime_to_postion(d.StandardTimeDeparture);
+  var x2 = rtime_to_postion(d.StandardTimeArrival);
+  var y = acnumber_to_postion(d.ACNumber);
+  var temp_top = d3.select('#controls').style('height');
+  var temp_g = d3.select('#'+d.ACNumber+'_'+d.FlightNumber);
+  var bubble_top = y + parseFloat(temp_top) - 10;
+  var bubble_left = x2+10;
+  d3.select("#lov_checker")
+  .style('top',bubble_top+'px')
+  .style('left',bubble_left+'px')
+  .style('display','block');
 
-}
-// ACNumber -> position
-function acnumber_to_postion(acnum){
-  return y_scale(hl_map[acnum])
-}
-function yyyymmdd(date,del="-")
-{
-  // Date => YYYY-MM-DD 형식의 문자열로
-  var sYear = date.getFullYear();
-  var sMonth = date.getMonth() + 1;
-  var sDate = date.getDate();
+  var lov_checker = d3.select('#lov_checker');
+  var cur_lov = temp_g.select('#daily_check #check_txt').text()
+  console.log(cur_lov);
+  $("select#lov_chk").val(check_lov.code(cur_lov));
+  lov_checker.select('#lov_chk')
 
-  sMonth = sMonth > 9 ? sMonth : "0" + sMonth;
-  sDate  = sDate > 9 ? sDate : "0" + sDate;
-  return sYear + del + sMonth + del + sDate;
+  lov_checker.select('#save_lovchk')
+    .attr('id','save_lovchk').text('S')
+    .on('click',()=>{
+      var sel_lov = $("select#lov_chk option:selected").val();
+      //console.log(sel_lov,check_lov.value(sel_lov));
+      temp_g.select('#daily_check').remove();
+      show_lov_check(temp_g,check_lov.value(sel_lov));
+      save_lov_check(temp_g,'Y',sel_lov);
+      });
 }
